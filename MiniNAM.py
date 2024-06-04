@@ -1,3 +1,4 @@
+from __future__ import division
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 2 as
 # published by the Free Software Foundation;
@@ -15,6 +16,14 @@
 # Created by Ahmed Khalid a.khalid@cs.ucc.ie and Jason Quinlan j.quinlan@cs.ucc.ie
 # 03 November 2017 - version number 1.0.1
 
+from past.builtins import execfile
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import next
+from builtins import range
+from past.utils import old_div
+from builtins import object
 import socket
 from struct import *
 from subprocess import *
@@ -46,10 +55,10 @@ from mininet.examples.clustercli import ClusterCLI
 
 from optparse import OptionParser
 import os
-from tkMessageBox import showerror
-import tkFont
-import tkFileDialog
-import tkSimpleDialog
+from tkinter.messagebox import showerror
+import tkinter.font
+import tkinter.filedialog
+import tkinter.simpledialog
 import json
 from distutils.version import StrictVersion
 from mininet.term import makeTerm, cleanUpScreens
@@ -57,13 +66,13 @@ from mininet.net import Mininet, VERSION
 from mininet.util import quietRun
 import random
 from threading import Thread
-from Tkinter import *
+from tkinter import *
 import time
 from cmath import pi
 from math import atan2, sin, cos
 from PIL import Image, ImageDraw
 from PIL import ImageTk as itk
-import Queue
+import queue
 from collections import OrderedDict
 
 MININET_VERSION = re.sub(r'[^\d\.]', '', VERSION)
@@ -95,7 +104,7 @@ SWITCHES = {'user': UserSwitch,
                  'ivs': IVSSwitch,
                  'lxbr': LinuxBridge,
                  'default': OVSSwitch}
-SWITCHES_TYPES = [switch.__name__ for switch in SWITCHES.values()]
+SWITCHES_TYPES = [switch.__name__ for switch in list(SWITCHES.values())]
 
 HOSTDEF = 'proc'
 HOSTS = {'proc': Host,
@@ -111,7 +120,7 @@ CONTROLLERS = {'ref': Controller,
                     'ryu': Ryu,
                     'default': DefaultController,  # Note: replaced below
                     'none': NullController}
-CONTROLLERS_TYPES = [ctrlr.__name__ for ctrlr in CONTROLLERS.values()]
+CONTROLLERS_TYPES = [ctrlr.__name__ for ctrlr in list(CONTROLLERS.values())]
 
 LINKDEF = 'default'
 LINKS = {'default': Link,
@@ -290,14 +299,14 @@ def packetParser(packet):
     except:
         return PacketInfo
 
-class PrefsDialog(tkSimpleDialog.Dialog):
+class PrefsDialog(tkinter.simpledialog.Dialog):
     "Preferences dialog"
 
     def __init__(self, parent, title, prefDefaults):
 
         self.prefValues = prefDefaults
 
-        tkSimpleDialog.Dialog.__init__(self, parent, title)
+        tkinter.simpledialog.Dialog.__init__(self, parent, title)
 
     def body(self, master):
         "Create dialog body"
@@ -326,8 +335,8 @@ class PrefsDialog(tkSimpleDialog.Dialog):
         # Field for Packet Flow Speed
         Label(self.rootFrame, text="Speed of Packet Flow").grid(row=2, sticky=W)
         self.flowTime = StringVar(self.rootFrame)
-        self.flowTime.set(FLOWTIME.keys()[FLOWTIME.values().index(self.prefValues['flowTime'])])
-        self.flowTimeMenu = OptionMenu(self.rootFrame, self.flowTime, *FLOWTIME.keys())
+        self.flowTime.set(list(FLOWTIME.keys())[list(FLOWTIME.values()).index(self.prefValues['flowTime'])])
+        self.flowTimeMenu = OptionMenu(self.rootFrame, self.flowTime, *list(FLOWTIME.keys()))
         self.flowTimeMenu.grid(row=2, column=1, sticky=W)
 
         # Field for Node Colors
@@ -437,14 +446,14 @@ class PrefsDialog(tkSimpleDialog.Dialog):
                        'identifyFlows': self.identifyFlows.get()
                        }
 
-class FiltersDialog(tkSimpleDialog.Dialog):
+class FiltersDialog(tkinter.simpledialog.Dialog):
     "Filters dialog"
 
     def __init__(self, parent, title, filterDefaults):
 
         self.filterValues = filterDefaults
 
-        tkSimpleDialog.Dialog.__init__(self, parent, title)
+        tkinter.simpledialog.Dialog.__init__(self, parent, title)
 
     def body(self, master):
         "Create dialog body"
@@ -493,10 +502,10 @@ class FiltersDialog(tkSimpleDialog.Dialog):
         hideFromIPMAC = str(self.hideFromIPMAC.get("1.0",'end-1c')).replace(' ', '').replace('\n', '').replace('\r', '').split(',')
         hideToIPMAC = str(self.hideToIPMAC.get("1.0",'end-1c')).replace(' ', '').replace('\n', '').replace('\r', '').split(',')
         # Removing empty items from lists
-        showPackets = filter(None, showPackets)
-        hidePackets = filter(None, hidePackets)
-        hideFromIPMAC = filter(None, hideFromIPMAC)
-        hideToIPMAC = filter(None, hideToIPMAC)
+        showPackets = [_f for _f in showPackets if _f]
+        hidePackets = [_f for _f in hidePackets if _f]
+        hideFromIPMAC = [_f for _f in hideFromIPMAC if _f]
+        hideToIPMAC = [_f for _f in hideToIPMAC if _f]
         self.result= {
             'showPackets': showPackets,
             'hidePackets': hidePackets,
@@ -584,7 +593,7 @@ class MiniNAM( Frame ):
         }
 
         # Style
-        self.fixedFont = tkFont.Font ( family="DejaVu Sans Mono", size="14" )
+        self.fixedFont = tkinter.font.Font ( family="DejaVu Sans Mono", size="14" )
         self.font = ( 'Geneva', 9 )
         self.smallFont = ( 'Geneva', 7 )
         self.bg = 'white'
@@ -732,7 +741,7 @@ class MiniNAM( Frame ):
             customs = {}
             if os.path.isfile( fileName ):
                 execfile( fileName, customs, customs )
-                for name, val in customs.iteritems():
+                for name, val in customs.items():
                     self.setCustom( name, val )
             else:
                 raise Exception( 'could not find custom file: %s' % fileName )
@@ -747,7 +756,7 @@ class MiniNAM( Frame ):
             param = name.upper()
             try:
                 globals()[ param ].update( value )
-                globals()[str(param + '_TYPES')].append( value.keys()[0])
+                globals()[str(param + '_TYPES')].append( list(value.keys())[0])
             except:
                 pass
         elif name == 'validate':
@@ -773,10 +782,10 @@ class MiniNAM( Frame ):
         loadedPrefs = self.convertJsonUnicode(json.load(f))
         # Load application preferences
         if 'preferences' in loadedPrefs:
-            self.appPrefs = dict(self.appPrefs.items() + loadedPrefs['preferences'].items())
+            self.appPrefs = dict(list(self.appPrefs.items()) + list(loadedPrefs['preferences'].items()))
         # Load application filters
         if 'filters' in loadedPrefs:
-            self.appFilters = dict(self.appFilters.items() + loadedPrefs['filters'].items())
+            self.appFilters = dict(list(self.appFilters.items()) + list(loadedPrefs['filters'].items()))
         f.close()
 
     def setNat( self, _option, opt_str, value, parser ):
@@ -803,7 +812,7 @@ class MiniNAM( Frame ):
         helpStr = ('|'.join(sorted(choicesDict.keys())) +
                    '[,param=value...]')
         helpList = ['%s=%s' % (k, v.__name__)
-                    for k, v in choicesDict.items()]
+                    for k, v in list(choicesDict.items())]
         helpStr += ' ' + (' '.join(helpList))
         params = dict(type='string', default=default, help=helpStr)
         params.update(**kwargs)
@@ -856,8 +865,8 @@ class MiniNAM( Frame ):
         opts.add_option( '--arp', action='store_true',
                          default=False, help='set all-pairs ARP entries' )
         opts.add_option( '--verbosity', '-v', type='choice',
-                         choices=LEVELS.keys(), default = 'info',
-                         help = '|'.join( LEVELS.keys() )  )
+                         choices=list(LEVELS.keys()), default = 'info',
+                         help = '|'.join( list(LEVELS.keys()) )  )
         opts.add_option( '--innamespace', action='store_true',
                          default=False, help='sw and ctrl in namespace?' )
         opts.add_option( '--listenport', type='int', default=6634,
@@ -886,7 +895,7 @@ class MiniNAM( Frame ):
                          metavar='server1,server2...',
                          help=( 'run on multiple servers (experimental!)' ) )
         opts.add_option( '--placement', type='choice',
-                         choices=self.PLACEMENT.keys(), default='block',
+                         choices=list(self.PLACEMENT.keys()), default='block',
                          metavar='block|random',
                          help=( 'node placement for --cluster '
                                 '(experimental!) ' ) )
@@ -1022,7 +1031,7 @@ class MiniNAM( Frame ):
     def TopoInfo(self):
 
         #Gather node info for all nodes in the network
-        for item , value in self.net.items():
+        for item , value in list(self.net.items()):
             if value.__class__.__name__ in CONTROLLERS_TYPES:
                 self.Nodes.append({'name': item, 'widget':None, 'type':value.__class__.__name__, 'ip':value.ip, 'port':value.port, 'color':self.Controller_Color})
             elif value.__class__.__name__ in SWITCHES_TYPES:
@@ -1284,7 +1293,7 @@ class MiniNAM( Frame ):
                 angle = -1 * atan2(dsty-srcy,dstx-srcx)
                 dx = 7 * sin(angle)
                 dy = 7 * cos(angle)
-                angle = 180*angle/pi
+                angle = old_div(180*angle,pi)
                 packetImage = itk.PhotoImage(image1.rotate(angle, expand=True))
 
             else:
@@ -1300,8 +1309,8 @@ class MiniNAM( Frame ):
 
             self.packetImage.append(packetImage)
             packet = c.create_image(srcx+dx, srcy+dy, image=packetImage)
-            deltax = (dstx - srcx) / 50
-            deltay = (dsty - srcy) / 50
+            deltax = old_div((dstx - srcx), 50)
+            deltay = old_div((dsty - srcy), 50)
             delta = deltax, deltay
 
             t = float(self.appPrefs['flowTime']) * float(PacketInfo['time']) / 50000  # 1000 for ms and 50 for steps
@@ -1337,7 +1346,7 @@ class MiniNAM( Frame ):
             if q_name in self.flowQueues:
                 return self.flowQueues[q_name]
             else:
-                self.flowQueues[q_name] = Queue.Queue()
+                self.flowQueues[q_name] = queue.Queue()
                 qt = Thread(target=self.startQueue, args=(self.flowQueues[q_name], t))
                 qt.daemon = True
                 qt.start()
@@ -1352,7 +1361,7 @@ class MiniNAM( Frame ):
             elif q_name2 in self.flowQueues:
                 return self.flowQueues[q_name2]
             else:
-                self.flowQueues[q_name1] =  Queue.Queue()
+                self.flowQueues[q_name1] =  queue.Queue()
                 qt = Thread(target=self.startQueue, args=(self.flowQueues[q_name1],t))
                 qt.daemon = True
                 qt.start()
@@ -1543,7 +1552,7 @@ class MiniNAM( Frame ):
             '<Leave>': self.leaveNode
         }
         l = Label()  # lightweight-ish owner for bindings
-        for event, binding in bindings.items():
+        for event, binding in list(bindings.items()):
             l.bind( event, binding )
         return l
 
@@ -1756,10 +1765,10 @@ class MiniNAM( Frame ):
     def convertJsonUnicode(self, text):
         "Some part of Mininet doesn't like Unicode"
         if isinstance(text, dict):
-            return {self.convertJsonUnicode(key): self.convertJsonUnicode(value) for key, value in text.iteritems()}
+            return {self.convertJsonUnicode(key): self.convertJsonUnicode(value) for key, value in text.items()}
         elif isinstance(text, list):
             return [self.convertJsonUnicode(element) for element in text]
-        elif isinstance(text, unicode):
+        elif isinstance(text, str):
             return text.encode('utf-8')
         else:
             return text
@@ -1771,7 +1780,7 @@ class MiniNAM( Frame ):
             ('All Files','*'),
         ]
         savingDictionary = {}
-        fileName = tkFileDialog.asksaveasfilename(filetypes=myFormats ,title="Save preferences and filters as...")
+        fileName = tkinter.filedialog.asksaveasfilename(filetypes=myFormats ,title="Save preferences and filters as...")
         if len(fileName ) > 0:
             # Save Application preferences
             savingDictionary['preferences'] = self.appPrefs
@@ -1796,17 +1805,17 @@ class MiniNAM( Frame ):
             ('Config File','*.config'),
             ('All Files','*'),
         ]
-        f = tkFileDialog.askopenfile(filetypes=myFormats, mode='rb')
+        f = tkinter.filedialog.askopenfile(filetypes=myFormats, mode='rb')
         if f == None:
             return
 
         loadedPrefs = self.convertJsonUnicode(json.load(f))
         # Load application preferences
         if 'preferences' in loadedPrefs:
-            self.appPrefs = dict(self.appPrefs.items() + loadedPrefs['preferences'].items())
+            self.appPrefs = dict(list(self.appPrefs.items()) + list(loadedPrefs['preferences'].items()))
         # Load application filters
         if 'filters' in loadedPrefs:
-            self.appFilters = dict(self.appFilters.items() + loadedPrefs['filters'].items())
+            self.appFilters = dict(list(self.appFilters.items()) + list(loadedPrefs['filters'].items()))
         f.close()
 
     def printdata( self ):
